@@ -1,3 +1,4 @@
+from keep_alive import keep_alive
 import discord
 from discord.ext import commands
 import datetime
@@ -217,5 +218,6 @@ async def on_auto_moderation_action_execution(action):
 
 # ================== RODAR O BOT ==================
 import os
+keep_alive()
 token = os.environ.get("DISCORD_TOKEN", "MTUwMjQ1MzA2OTQ5MTczMjU2Mw.G_jOz5.kiAZKehQf_o8LoiixTQp_joaqcqzx54pY2gh4s")
 bot.run(token)
