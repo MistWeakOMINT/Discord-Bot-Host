@@ -32,12 +32,32 @@ LOG_SEGURANCA = 1499872179234541791   # registro-op-segurança
 
 
 message_cache = {}
+invite_cache = {}
 
 
 @bot.event
 async def on_ready():
     print(f"✅ Bot online como {bot.user}")
     print(f"Conectado em: {[g.name for g in bot.guilds]}")
+    guild = bot.get_guild(GUILD_SIEX)
+    if guild:
+        try:
+            invites = await guild.fetch_invites()
+            invite_cache[GUILD_SIEX] = {inv.code: inv.uses for inv in invites}
+        except Exception as e:
+            print(f"Erro ao cachear convites: {e}")
+
+
+@bot.event
+async def on_invite_create(invite):
+    if invite.guild.id == GUILD_SIEX:
+        invite_cache.setdefault(GUILD_SIEX, {})[invite.code] = invite.uses
+
+
+@bot.event
+async def on_invite_delete(invite):
+    if invite.guild.id == GUILD_SIEX:
+        invite_cache.get(GUILD_SIEX, {}).pop(invite.code, None)
 
 
 # ================== MENSAGENS ==================
