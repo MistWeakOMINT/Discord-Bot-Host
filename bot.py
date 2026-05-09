@@ -42,7 +42,7 @@ async def on_ready():
     guild = bot.get_guild(GUILD_SIEX)
     if guild:
         try:
-            invites = await guild.fetch_invites()
+            invites = await guild.invites()
             invite_cache[GUILD_SIEX] = {inv.code: inv.uses for inv in invites}
         except Exception as e:
             print(f"Erro ao cachear convites: {e}")
@@ -167,15 +167,64 @@ async def on_audit_log_entry_create(entry):
 @bot.event
 async def on_member_join(member):
     if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX): return
+
     embed = discord.Embed(title="✅ Novo Membro", color=0x00FF00, timestamp=datetime.datetime.utcnow())
     embed.set_author(name=str(member), icon_url=member.avatar.url if member.avatar else None)
     embed.add_field(name="Usuário", value=f"{member.mention} (`{member.id}`)", inline=False)
     embed.add_field(name="Conta criada", value=member.created_at.strftime("%d/%m/%Y às %H:%M"), inline=True)
     embed.set_footer(text=member.guild.name)
 
-
     channel = bot.get_channel(LOG_ENTRADA)
     if channel: await channel.send(embed=embed)
+
+    # ================== RASTREAMENTO DE CONVITES ==================
+    if member.guild.id == GUILD_SIEX:
+        try:
+            invites_antes = invite_cache.get(GUILD_SIEX, {})
+            invites_agora = await member.guild.invites()
+            invite_cache[GUILD_SIEX] = {inv.code: inv.uses for inv in invites_agora}
+
+            invite_usado = None
+            inviter = None
+            for inv in invites_agora:
+                uses_antes = invites_antes.get(inv.code, 0)
+                if inv.uses > uses_antes:
+                    invite_usado = inv
+                    inviter = inv.inviter
+                    break
+
+            canal_convites = bot.get_channel(LOG_CONVITES)
+            if canal_convites:
+                em = discord.Embed(
+                    title="📨 Novo Membro por Convite",
+                    color=0x5865F2,
+                    timestamp=datetime.datetime.utcnow()
+                )
+                em.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)
+                em.add_field(
+                    name="👤 Membro Convidado",
+                    value=f"{member.mention}\n`{member}`\nID: `{member.id}`",
+                    inline=True
+                )
+                em.add_field(
+                    name="📩 Convidado por",
+                    value=f"{inviter.mention}\n`{inviter}`\nID: `{inviter.id}`" if inviter else "Desconhecido",
+                    inline=True
+                )
+                em.add_field(
+                    name="🔗 Código do Convite",
+                    value=f"`{invite_usado.code}`\nUsos: `{invite_usado.uses}`" if invite_usado else "Desconhecido",
+                    inline=False
+                )
+                em.add_field(
+                    name="📅 Conta Criada em",
+                    value=member.created_at.strftime("%d/%m/%Y às %H:%M"),
+                    inline=True
+                )
+                em.set_footer(text=member.guild.name, icon_url=member.guild.icon.url if member.guild.icon else None)
+                await canal_convites.send(embed=em)
+        except Exception as e:
+            print(f"Erro no rastreamento de convite: {e}")
 
 
 @bot.event
@@ -239,5 +288,4 @@ async def on_auto_moderation_action_execution(action):
 # ================== RODAR O BOT ==================
 import os
 keep_alive()
-token = os.environ.get("DISCORD_TOKEN", "MTUwMjQ1MzA2OTQ5MTczMjU2Mw.G_jOz5.kiAZKehQf_o8LoiixTQp_joaqcqzx54pY2gh4s")
-bot.run(token)
+bot.run(os.environ.get("DISCORD_TOKEN", "MTUwMjQ1MzA2OTQ5MTczMjU2Mw.G_jOz5.kiAZKehQf_o8LoiixTQp_joaqcqzx54pY2gh4s"))
