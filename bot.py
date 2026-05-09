@@ -5,7 +5,11 @@ import datetime
 
 # ================== CONFIG ==================
 intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
 intents.voice_states = True
+intents.moderation = True
+intents.auto_moderation = True  # Para logs de AutoMod
 
 
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
