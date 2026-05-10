@@ -1,10 +1,9 @@
-# Instala as dependências de JS apenas se a pasta node_modules não existir
-if [ ! -d "node_modules" ]; then
-  pnpm install
-fi
+# Instalar dependências (se necessário)
+pip install -r requirements.txt
+pnpm install
 
-# Roda o JS em segundo plano (substitua pelo nome real do seu arquivo JS)
-node sistema_omint.js & 
+# Rodar o sistema de segurança JS em segundo plano
+node sistema_seguranca.js & 
 
-# Roda o bot principal em Python
+# Rodar o bot principal Python
 python bot.py
