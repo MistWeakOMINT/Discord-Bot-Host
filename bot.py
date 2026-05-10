@@ -289,7 +289,8 @@ async def on_auto_moderation_action_execution(action):
     if channel: await channel.send(embed=embed)
 
 
-# ================== RODAR O BOT ==================
+# ================== RODAR O BOT ================
 import os
-keep_alive()
-bot.run(os.environ.get("DISCORD_TOKEN", "MTUwMjQ1MzA2OTQ5MTczMjU2Mw.G_jOz5.kiAZKehQf_o8LoiixTQp_joaqcqzx54pY2gh4s"))
+token = os.environ.get("DISCORD_TOKEN")
+# e onde quer que o código use o token, use a variável 'token'
+
