@@ -88,7 +88,7 @@ class PontoView(View):
             em.add_field(name="📤 Saída", value=f"<t:{ts(now)}:T>\n<t:{ts(now)}:d>", inline=True)
             em.add_field(name="⏱️ Duração", value=format_duration(duracao), inline=True)
             em.set_footer(text=f"Registro #{aberto['id']}  •  {interaction.guild.name}")
-            await interaction.response.send_message(embed=em, ephemeral=True)
+            await interaction.response.send_message(embed=em)
 
         else:
             conn.execute(
@@ -109,7 +109,7 @@ class PontoView(View):
             em.add_field(name="📡 Status", value="`🟢 Em Serviço`", inline=True)
             em.add_field(name="⏱️ Duração", value="`00h 00m 00s`", inline=True)
             em.set_footer(text=f"Registro #{ponto_id}  •  {interaction.guild.name}")
-            await interaction.response.send_message(embed=em, ephemeral=True)
+            await interaction.response.send_message(embed=em)
 
     @discord.ui.button(
         label="Reabrir Ponto",
@@ -129,8 +129,7 @@ class PontoView(View):
         if aberto:
             conn.close()
             await interaction.response.send_message(
-                "❌ Você já tem um ponto aberto. Encerre-o antes de reabrir outro.",
-                ephemeral=True
+                "❌ Você já tem um ponto aberto. Encerre-o antes de reabrir outro."
             )
             return
 
@@ -142,8 +141,7 @@ class PontoView(View):
         if not ultimo:
             conn.close()
             await interaction.response.send_message(
-                "❌ Nenhum ponto anterior encontrado para reabrir.",
-                ephemeral=True
+                "❌ Nenhum ponto anterior encontrado para reabrir."
             )
             return
 
@@ -163,7 +161,7 @@ class PontoView(View):
         em.add_field(name="📥 Entrada Original", value=f"<t:{ts(entrada)}:f>", inline=True)
         em.add_field(name="📋 ID do Registro", value=f"`#{ultimo['id']}`", inline=True)
         em.set_footer(text=f"Clique em 🟢 Bater Ponto para encerrar novamente  •  {interaction.guild.name}")
-        await interaction.response.send_message(embed=em, ephemeral=True)
+        await interaction.response.send_message(embed=em)
 
 
 # ================== SETUP DOS COMANDOS ==================
@@ -171,7 +169,7 @@ def setup_ponto(bot):
     init_db()
 
     # ── /ponto ──────────────────────────────────────────────────────────────
-    @bot.tree.command(name="ponto", description="🖥️ Painel de controle do ponto eletrônico")
+    @bot.tree.command(name="ponto", description="Painel de controle do ponto eletronico")
     async def cmd_ponto(interaction: discord.Interaction):
         conn = get_db()
         user = interaction.user
@@ -222,11 +220,11 @@ def setup_ponto(bot):
         em.add_field(name="⏱️ Total Acumulado", value=format_duration(datetime.timedelta(seconds=total_s)), inline=True)
         em.set_footer(text="🟢 Bater Ponto para entrar/sair  •  🔄 Reabrir para corrigir")
 
-        await interaction.response.send_message(embed=em, view=PontoView(), ephemeral=True)
+        await interaction.response.send_message(embed=em, view=PontoView())
 
     # ── /relatorios ──────────────────────────────────────────────────────────
-    @bot.tree.command(name="relatorios", description="📁 Relatórios de ponto de um membro")
-    @app_commands.describe(membro="Membro para visualizar (padrão: você mesmo)")
+    @bot.tree.command(name="relatorios", description="Relatorios de ponto de um membro")
+    @app_commands.describe(membro="Membro para visualizar (padrao: voce mesmo)")
     async def cmd_relatorios(interaction: discord.Interaction, membro: Optional[discord.Member] = None):
         alvo = membro or interaction.user
         conn = get_db()
@@ -244,8 +242,7 @@ def setup_ponto(bot):
 
         if not todos:
             await interaction.response.send_message(
-                f"❌ Nenhum registro encontrado para **{alvo.display_name}**.",
-                ephemeral=True
+                f"❌ Nenhum registro encontrado para **{alvo.display_name}**."
             )
             return
 
@@ -287,13 +284,13 @@ def setup_ponto(bot):
                 em.add_field(name=titulo, value=val, inline=True)
 
         em.set_footer(text=f"Exibindo {len(ultimos)} de {len(todos)} registros")
-        await interaction.response.send_message(embed=em, ephemeral=True)
+        await interaction.response.send_message(embed=em)
 
     # ── /apagar ──────────────────────────────────────────────────────────────
-    @bot.tree.command(name="apagar", description="🗑️ Apague registros de ponto de um membro")
+    @bot.tree.command(name="apagar", description="Apague registros de ponto de um membro")
     @app_commands.describe(
-        membro="Membro cujos registros serão apagados",
-        quantidade="Número de registros a apagar (vazio = apaga TODOS)"
+        membro="Membro cujos registros serao apagados",
+        quantidade="Numero de registros a apagar (vazio = apaga TODOS)"
     )
     @app_commands.default_permissions(manage_guild=True)
     async def cmd_apagar(interaction: discord.Interaction, membro: discord.Member, quantidade: Optional[int] = None):
@@ -307,8 +304,7 @@ def setup_ponto(bot):
         if total == 0:
             conn.close()
             await interaction.response.send_message(
-                f"❌ Nenhum registro encontrado para **{membro.display_name}**.",
-                ephemeral=True
+                f"❌ Nenhum registro encontrado para **{membro.display_name}**."
             )
             return
 
@@ -342,7 +338,7 @@ def setup_ponto(bot):
         await interaction.response.send_message(embed=em)
 
     # ── /meu-ponto ───────────────────────────────────────────────────────────
-    @bot.tree.command(name="meu-ponto", description="👤 Veja um resumo rápido do seu ponto")
+    @bot.tree.command(name="meu-ponto", description="Veja um resumo rapido do seu ponto")
     async def cmd_meu_ponto(interaction: discord.Interaction):
         conn = get_db()
         user = interaction.user
@@ -399,65 +395,11 @@ def setup_ponto(bot):
         em.add_field(name="📊 Total Acumulado", value=format_duration(datetime.timedelta(seconds=total_s)), inline=True)
         em.add_field(name="📋 Total de Registros", value=f"`{len(todos_fechados)}`", inline=True)
         em.add_field(name="\u200b", value="\u200b", inline=True)
-        em.set_footer(text="Use /ponto para registrar  •  /relatorios para histórico")
-        await interaction.response.send_message(embed=em, ephemeral=True)
-
-    # ── /ranking-horas ───────────────────────────────────────────────────────
-    @bot.tree.command(name="ranking-horas", description="🏆 Ranking de horas trabalhadas no servidor")
-    async def cmd_ranking(interaction: discord.Interaction):
-        conn = get_db()
-        usuarios = conn.execute(
-            "SELECT DISTINCT user_id, display_name FROM pontos WHERE guild_id=?",
-            (interaction.guild_id,)
-        ).fetchall()
-
-        ranking = []
-        for u in usuarios:
-            fechados = conn.execute(
-                "SELECT * FROM pontos WHERE guild_id=? AND user_id=? AND status='fechado'",
-                (interaction.guild_id, u['user_id'])
-            ).fetchall()
-            s = sum(
-                (datetime.datetime.fromisoformat(p['saida']) - datetime.datetime.fromisoformat(p['entrada'])).total_seconds()
-                for p in fechados if p['saida']
-            )
-            ranking.append((u['user_id'], u['display_name'], s))
-
-        conn.close()
-        ranking.sort(key=lambda x: x[2], reverse=True)
-        ranking = ranking[:10]
-
-        if not ranking:
-            await interaction.response.send_message("❌ Nenhum registro encontrado.", ephemeral=True)
-            return
-
-        max_s = ranking[0][2] or 1
-        medals = ["🥇", "🥈", "🥉"] + ["🔹"] * 7
-
-        em = discord.Embed(color=0xFEE75C, timestamp=datetime.datetime.utcnow())
-        em.set_author(
-            name=interaction.guild.name,
-            icon_url=interaction.guild.icon.url if interaction.guild.icon else None
-        )
-        em.description = (
-            f"## 🏆 Ranking de Horas\n"
-            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"Top {len(ranking)} membros por horas trabalhadas\n"
-        )
-
-        for i, (uid, name, s) in enumerate(ranking):
-            pct = (s / max_s) * 100
-            em.add_field(
-                name=f"{medals[i]}  {name}",
-                value=f"{format_duration(datetime.timedelta(seconds=s))}\n{progress_bar(pct)}",
-                inline=False
-            )
-
-        em.set_footer(text=f"Atualizado agora  •  {interaction.guild.name}")
+        em.set_footer(text="Use /ponto para registrar  •  /relatorios para historico")
         await interaction.response.send_message(embed=em)
 
     # ── /status-servidor ─────────────────────────────────────────────────────
-    @bot.tree.command(name="status-servidor", description="📡 Veja quem está em serviço agora")
+    @bot.tree.command(name="status-servidor", description="Veja quem esta em servico agora")
     async def cmd_status(interaction: discord.Interaction):
         conn = get_db()
         abertos = conn.execute(
