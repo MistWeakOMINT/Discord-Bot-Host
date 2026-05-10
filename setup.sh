@@ -1,9 +1,7 @@
-# Instalar dependências (se necessário)
-pip install -r requirements.txt
-pnpm install
+#!/bin/bash
 
-# Rodar o sistema de segurança JS em segundo plano
-node sistema_seguranca.js & 
+# Instalar dependências Python
+pip install -r requirements.txt
 
 # Rodar o bot principal Python
 python bot.py
