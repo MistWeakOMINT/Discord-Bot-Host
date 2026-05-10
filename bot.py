@@ -1,4 +1,5 @@
 from keep_alive import keep_alive
+from ponto import setup_ponto
 import discord
 from discord.ext import commands
 import datetime
@@ -37,7 +38,10 @@ invite_cache = {}
 
 @bot.event
 async def on_ready():
+    setup_ponto(bot)
+    await bot.tree.sync()
     print(f"✅ Bot online como {bot.user}")
+    print(f"✅ Slash commands sincronizados")
     print(f"Conectado em: {[g.name for g in bot.guilds]}")
     guild = bot.get_guild(GUILD_SIEX)
     if guild:
