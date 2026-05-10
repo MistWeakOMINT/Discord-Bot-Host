@@ -500,11 +500,8 @@ class EmbedPanel(discord.ui.View):
             icon_url=self.guild.icon.url if self.guild.icon else None
         )
 
-        if self.guild.icon:
-            embed.set_image(url=self.guild.icon.url)
-
         embed.set_footer(
-            text="Sistema Militar de Embeds"
+            text="Sistema de Embeds"
         )
 
         embed.timestamp = datetime.datetime.utcnow()
