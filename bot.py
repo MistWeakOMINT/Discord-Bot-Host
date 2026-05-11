@@ -2,8 +2,7 @@ from keep_alive import keep_alive
 import discord
 from discord.ext import commands
 import os
-import json
-from datetime import datetime
+import traceback
 
 # ================== CONFIG ==================
 intents = discord.Intents.default()
@@ -30,17 +29,34 @@ LOG_CHANNELS = {
     "security": 1499872179234541791,
 }
 
-# ================== EVENTS ==================
+# ================== ON READY ==================
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
-    print(f"✅ Bot online como {bot.user} • {len(bot.guilds)} servidores")
+    print(f"✅ Bot online como {bot.user}")
 
-    # Carregar cogs
+    # Sincroniza comandos
+    try:
+        synced = await bot.tree.sync()
+        print(f"✅ {len(synced)} comandos sincronizados.")
+    except Exception as e:
+        print(f"❌ Erro ao sincronizar comandos: {e}")
+
+    # Carrega os Cogs com erro visível
+    print("\n🔄 Carregando Cogs...")
+    if not os.path.exists("./cogs"):
+        print("❌ Pasta 'cogs' não encontrada!")
+        return
+
     for filename in os.listdir("./cogs"):
         if filename.endswith(".py"):
-            await bot.load_extension(f"cogs.{filename[:-3]}")
-            print(f"✅ Cog carregado: {filename}")
+            try:
+                await bot.load_extension(f"cogs.{filename[:-3]}")
+                print(f"✅ Cog carregado com sucesso: {filename}")
+            except Exception as e:
+                print(f"❌ ERRO ao carregar {filename}")
+                print(traceback.format_exc())
+
+    print("\n🚀 Bot carregado completamente!\n")
 
 keep_alive()
 bot.run(os.environ.get("DISCORD_TOKEN"))
