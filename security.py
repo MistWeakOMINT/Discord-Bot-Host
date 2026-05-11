@@ -1026,3 +1026,15 @@ class SecurityCog(commands.Cog, name="SecurityCog"):
             await ctx.send("❌ Membro não encontrado.", delete_after=5)
         elif isinstance(error, commands.BadArgument):
             await ctx.send("❌ Argumentos inválidos.", delete_after=5)
+
+# ────────────────────────────────────────────────────────────────────────────
+#  SETUP FUNCTION (adicione no final do arquivo)
+# ────────────────────────────────────────────────────────────────────────────
+
+async def setup_security(bot: commands.Bot):
+    """Função de setup para carregar o sistema de segurança"""
+    try:
+        await bot.add_cog(SecurityCog(bot))
+        print("🔐 HSIS — Hillenkoetter Security Intelligence System v2.0 carregado com sucesso!")
+    except Exception as e:
+        print(f"❌ Erro ao carregar SecurityCog: {e}")
