@@ -181,8 +181,6 @@ if entry.action == discord.AuditLogAction.member_role_update:
     embed.set_footer(text=entry.guild.name)  
 
     channel = bot.get_channel(LOG_CARGOS)  
-    if channel: await channel.send(embed=embed)  
-
 
 # PUNIÇÕES  
 elif entry.action in (discord.AuditLogAction.ban, discord.AuditLogAction.kick, discord.AuditLogAction.member_update):  
@@ -203,8 +201,6 @@ elif entry.action in (discord.AuditLogAction.ban, discord.AuditLogAction.kick, d
 
 
     channel = bot.get_channel(LOG_PUNICOES)  
-    if channel: await channel.send(embed=embed)  
-
 
 # CONVITES  
 elif entry.action == discord.AuditLogAction.invite_create:  
@@ -215,7 +211,6 @@ elif entry.action == discord.AuditLogAction.invite_create:
 
 
     channel = bot.get_channel(LOG_CONVITES)  
-    if channel: await channel.send(embed=embed)
 
 # ================== JOIN / LEAVE ==================
 
@@ -232,7 +227,6 @@ embed.add_field(name="Conta criada", value=member.created_at.strftime("%d/%m/%Y 
 embed.set_footer(text=member.guild.name)  
 
 channel = bot.get_channel(LOG_ENTRADA)  
-if channel: await channel.send(embed=embed)  
 
 # ================== RASTREAMENTO DE CONVITES ==================  
 if member.guild.id == GUILD_SIEX:  
@@ -294,7 +288,6 @@ embed.add_field(name="Usuário", value=f"{member} ({member.id})", inline=False)
 embed.set_footer(text=member.guild.name)
 
 channel = bot.get_channel(LOG_ENTRADA)  
-if channel: await channel.send(embed=embed)
 
 # ================== VOICE ==================
 
@@ -324,6 +317,7 @@ embed.set_footer(text=member.guild.name)
 
 
 channel = bot.get_channel(LOG_CHAMADAS)  
+
 # ================== SEGURANÇA (AutoMod + Raid) ==================
 
 @bot.event
@@ -340,7 +334,6 @@ embed.set_footer(text=action.guild.name)
 
 
 channel = bot.get_channel(LOG_SEGURANCA)  
-if channel: await channel.send(embed=embed)
 
 # =========================================================
 # SISTEMA ULTRA AVANÇADO DE EMBEDS
