@@ -2,7 +2,8 @@ from keep_alive import keep_alive
 from ponto import setup_ponto
 import discord
 from discord.ext import commands
-import datetime
+import datetim
+from discord import app_commands
 
 
 # ================== CONFIG ==================
