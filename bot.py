@@ -114,8 +114,7 @@ embed.add_field(name="Autor", value=msg.author.mention, inline=True)
 embed.add_field(name="Canal", value=msg.channel.mention, inline=True)  
 embed.set_footer(text=f"{msg.guild.name} • ID: {msg.author.id}")  
 
-channel = bot.get_channel(LOG_TEXTO)  
-if channel: await channel.send(embed=embed)
+channel = bot.get_channel(LOG_TEXTO)
 
 @bot.event
 async def on_message_edit(before, after):
