@@ -3,6 +3,9 @@ from ponto import setup_ponto
 import discord
 from discord.ext import commands
 import datetime
+import os
+import json
+import io
 
 # ================== CONFIG ==================
 
@@ -11,117 +14,98 @@ intents.message_content = True
 intents.members = True
 intents.voice_states = True
 intents.moderation = True
-intents.auto_moderation = True  # Para logs de AutoMod
+intents.auto_moderation = True
 
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 # ================== IDs ==================
 
-GUILD_PRINCIPAL = 1135558598857068564   # ← Troque: Vila Militar • Roleplay
-GUILD_SIEX = 1499872178039029792        # ← Troque: 6° D Sup - SIEx
+GUILD_PRINCIPAL = 1135558598857068564
+GUILD_SIEX = 1499872178039029792
 
-# Canais de Logs no SIEx
-
-LOG_TEXTO = 1499872178986942539       # registro-op-texto
-LOG_CARGOS = 1499872178986942541      # registro-op-cargos
-LOG_ENTRADA = 1499872178986942543     # registro-op-entrada
-LOG_CONVITES = 1499872178986942544    # registro-op-convites
-LOG_PUNICOES = 1499872179234541788    # registro-op-punições
-LOG_CHAMADAS = 1499872179234541789    # registro-op-chamadas
-LOG_SEGURANCA = 1499872179234541791   # registro-op-segurança
+LOG_TEXTO = 1499872178986942539
+LOG_CARGOS = 1499872178986942541
+LOG_ENTRADA = 1499872178986942543
+LOG_CONVITES = 1499872178986942544
+LOG_PUNICOES = 1499872179234541788
+LOG_CHAMADAS = 1499872179234541789
+LOG_SEGURANCA = 1499872179234541791
 
 message_cache = {}
 invite_cache = {}
 
+# ================== READY ==================
+
 @bot.event
 async def on_ready():
-
     setup_ponto(bot)
-
     await bot.tree.sync()
 
-    print(f"✅ Bot online como {bot.user}")
-    print(f"✅ Slash commands sincronizados")
-    print(f"Conectado em: {[g.name for g in bot.guilds]}")
+    print(f"Bot online como {bot.user}")
 
     guild = bot.get_guild(GUILD_SIEX)
 
     if guild:
-
         try:
-
             invites = await guild.invites()
-
-            invite_cache[GUILD_SIEX] = {
-                inv.code: inv.uses
-                for inv in invites
-            }
-
+            invite_cache[GUILD_SIEX] = {inv.code: inv.uses for inv in invites}
         except Exception as e:
+            print(f"Erro convites: {e}")
 
-            print(f"Erro ao cachear convites: {e}")
-
+# ================== INVITES ==================
 
 @bot.event
 async def on_invite_create(invite):
-
     if invite.guild.id == GUILD_SIEX:
-
-        invite_cache.setdefault(
-            GUILD_SIEX,
-            {}
-        )[invite.code] = invite.uses
-
+        invite_cache.setdefault(GUILD_SIEX, {})[invite.code] = invite.uses
 
 @bot.event
 async def on_invite_delete(invite):
-
     if invite.guild.id == GUILD_SIEX:
+        invite_cache.get(GUILD_SIEX, {}).pop(invite.code, None)
 
-        invite_cache.get(
-            GUILD_SIEX,
-            {}
-        ).pop(invite.code, None)
-# ================== MENSAGENS ==================
+# ================== MESSAGE CACHE ==================
 
 @bot.event
 async def on_message(message):
-
     if message.guild and message.guild.id in (GUILD_PRINCIPAL, GUILD_SIEX):
-
         message_cache[message.id] = message
 
         if len(message_cache) > 5000:
-
             for old_id in list(message_cache.keys())[:-4000]:
-
                 message_cache.pop(old_id, None)
+
+# ================== DELETE ==================
 
 @bot.event
 async def on_raw_message_delete(payload):
-
     msg = message_cache.pop(payload.message_id, None)
-
     if not msg or msg.author.bot:
         return
-
     if payload.guild_id not in (GUILD_PRINCIPAL, GUILD_SIEX):
         return
 
-embed = discord.Embed(title="🗑 Mensagem Apagada", description=msg.content[:1000] or "*Sem conteúdo*", color=0xFF0000, timestamp=datetime.datetime.utcnow())  
-embed.set_author(name=str(msg.author), icon_url=msg.author.avatar.url if msg.author.avatar else None)  
-embed.add_field(name="Autor", value=msg.author.mention, inline=True)  
-embed.add_field(name="Canal", value=msg.channel.mention, inline=True)  
-embed.set_footer(text=f"{msg.guild.name} • ID: {msg.author.id}")  
+    embed = discord.Embed(
+        title="🗑 Mensagem Apagada",
+        description=msg.content[:1000] or "*Sem conteúdo*",
+        color=0xFF0000,
+        timestamp=datetime.datetime.utcnow()
+    )
+    embed.set_author(name=str(msg.author))
+    embed.add_field(name="Autor", value=msg.author.mention)
+    embed.add_field(name="Canal", value=msg.channel.mention)
+    embed.set_footer(text=f"{msg.guild.name}")
 
-channel = bot.get_channel(LOG_TEXTO)
+    channel = bot.get_channel(LOG_TEXTO)
+    if channel:
+        await channel.send(embed=embed)
+
+# ================== EDIT ==================
 
 @bot.event
 async def on_message_edit(before, after):
-
     if before.content == after.content or before.author.bot:
         return
-
     if before.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
         return
 
@@ -131,285 +115,95 @@ async def on_message_edit(before, after):
         timestamp=datetime.datetime.utcnow()
     )
 
-    embed.set_author(
-        name=str(before.author),
-        icon_url=before.author.avatar.url if before.author.avatar else None
-    )
-
-    embed.add_field(
-        name="Autor",
-        value=before.author.mention,
-        inline=True
-    )
-
-    embed.add_field(
-        name="Canal",
-        value=before.channel.mention,
-        inline=True
-    )
-
-    embed.add_field(
-        name="Antes",
-        value=before.content[:500] or "*Vazio*",
-        inline=False
-    )
-
-    embed.add_field(
-        name="Depois",
-        value=after.content[:500] or "*Vazio*",
-        inline=False
-    )
-
-    embed.set_footer(text=before.guild.name)
+    embed.add_field(name="Antes", value=before.content[:500])
+    embed.add_field(name="Depois", value=after.content[:500])
 
     channel = bot.get_channel(LOG_TEXTO)
+    if channel:
+        await channel.send(embed=embed)
 
-# ================== AUDIT LOG (Cargos, Punições, Convites) ==================
-
-@bot.event
-async def on_audit_log_entry_create(entry):
-
-    if entry.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
-        return
-
-# CARGOS  
-if entry.action == discord.AuditLogAction.member_role_update:  
-    embed = discord.Embed(title="🔄 Cargos Alterados", color=0x00FF88, timestamp=entry.created_at)  
-    embed.set_author(name=str(entry.target), icon_url=entry.target.avatar.url if entry.target and hasattr(entry.target, 'avatar') else None)  
-    embed.add_field(name="Usuário", value=entry.target.mention if entry.target else "?", inline=True)  
-    embed.add_field(name="Responsável", value=entry.user.mention if entry.user else "Desconhecido", inline=True)  
-    embed.set_footer(text=entry.guild.name)  
-
-    channel = bot.get_channel(LOG_CARGOS)  
-
-# PUNIÇÕES  
-elif entry.action in (discord.AuditLogAction.ban, discord.AuditLogAction.kick, discord.AuditLogAction.member_update):  
-    if entry.action == discord.AuditLogAction.ban:  
-        title, color = "🚫 Usuário Banido", 0x8B0000  
-    elif entry.action == discord.AuditLogAction.kick:  
-        title, color = "👢 Usuário Expulso", 0xFF4500  
-    else:  
-        title, color = "🔇 Timeout aplicado", 0xFFAA00  
-
-
-    embed = discord.Embed(title=title, color=color, timestamp=entry.created_at)  
-    embed.set_author(name=str(entry.target), icon_url=entry.target.avatar.url if entry.target and hasattr(entry.target, 'avatar') else None)  
-    embed.add_field(name="Usuário", value=entry.target.mention if entry.target else "?", inline=True)  
-    embed.add_field(name="Responsável", value=entry.user.mention if entry.user else "?", inline=True)  
-    embed.add_field(name="Motivo", value=entry.reason or "Sem motivo", inline=False)  
-    embed.set_footer(text=entry.guild.name)  
-
-
-    channel = bot.get_channel(LOG_PUNICOES)  
-
-# CONVITES  
-elif entry.action == discord.AuditLogAction.invite_create:  
-    embed = discord.Embed(title="📨 Convite Usado", color=0xAA00FF, timestamp=entry.created_at)  
-    embed.add_field(name="Novo Membro", value=entry.target.mention if entry.target else "?", inline=True)  
-    embed.add_field(name="Convidado por", value=entry.user.mention if entry.user else "?", inline=True)  
-    embed.set_footer(text=entry.guild.name)  
-
-
-    channel = bot.get_channel(LOG_CONVITES)  
-
-# ================== JOIN / LEAVE ==================
+# ================== JOIN ==================
 
 @bot.event
 async def on_member_join(member):
-
     if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
         return
 
     embed = discord.Embed(
-        title="✅ Novo Membro",
+        title="Novo membro",
         color=0x00FF00,
         timestamp=datetime.datetime.utcnow()
     )
 
-    embed.set_author(
-        name=str(member),
-        icon_url=member.avatar.url if member.avatar else None
-    )
-
-    embed.add_field(
-        name="Usuário",
-        value=f"{member.mention} (`{member.id}`)",
-        inline=False
-    )
-
-    embed.add_field(
-        name="Conta criada",
-        value=member.created_at.strftime("%d/%m/%Y às %H:%M"),
-        inline=True
-    )
-
-    embed.set_footer(text=member.guild.name)
+    embed.add_field(name="Usuário", value=member.mention)
 
     channel = bot.get_channel(LOG_ENTRADA)
-
     if channel:
         await channel.send(embed=embed)
 
-    # ================== CONVITES ==================
-
     if member.guild.id == GUILD_SIEX:
-
         try:
-
-            invites_antes = invite_cache.get(GUILD_SIEX, {})
-
             invites_agora = await member.guild.invites()
-
-            invite_cache[GUILD_SIEX] = {
-                inv.code: inv.uses
-                for inv in invites_agora
-            }
-
-            invite_usado = None
-            inviter = None
-
-            for inv in invites_agora:
-
-                uses_antes = invites_antes.get(inv.code, 0)
-
-                if inv.uses > uses_antes:
-                    invite_usado = inv
-                    inviter = inv.inviter
-                    break
-
-            canal_convites = bot.get_channel(LOG_CONVITES)
-
-            if canal_convites:
-
-                em = discord.Embed(
-                    title="📨 Novo Membro por Convite",
-                    color=0x5865F2,
-                    timestamp=datetime.datetime.utcnow()
-                )
-
-                em.add_field(
-                    name="Membro",
-                    value=f"{member.mention} (`{member.id}`)",
-                    inline=True
-                )
-
-                em.add_field(
-                    name="Convidado por",
-                    value=inviter.mention if inviter else "Desconhecido",
-                    inline=True
-                )
-
-                await canal_convites.send(embed=em)
-
+            invite_cache[GUILD_SIEX] = {inv.code: inv.uses for inv in invites_agora}
         except Exception as e:
-            print(f"Erro convites: {e}")
+            print(e)
 
-# ================== RASTREAMENTO DE CONVITES ==================  
-if member.guild.id == GUILD_SIEX:  
-    try:  
-        invites_antes = invite_cache.get(GUILD_SIEX, {})  
-        invites_agora = await member.guild.invites()  
-        invite_cache[GUILD_SIEX] = {inv.code: inv.uses for inv in invites_agora}  
-
-        invite_usado = None  
-        inviter = None  
-        for inv in invites_agora:  
-            uses_antes = invites_antes.get(inv.code, 0)  
-            if inv.uses > uses_antes:  
-                invite_usado = inv  
-                inviter = inv.inviter  
-                break  
-        canal_convites = bot.get_channel(LOG_CONVITES)  
-        if canal_convites:  
-            em = discord.Embed(  
-                title="📨 Novo Membro por Convite",  
-                color=0x5865F2,  
-                timestamp=datetime.datetime.utcnow()  
-            )  
-            em.set_thumbnail(url=member.avatar.url if member.avatar else member.default_avatar.url)  
-            em.add_field(  
-                name="👤 Membro Convidado",  
-                value=f"{member.mention}\n`{member}`\nID: `{member.id}`",  
-                inline=True  
-            )  
-            em.add_field(  
-                name="📩 Convidado por",  
-                value=f"{inviter.mention}\n`{inviter}`\nID: `{inviter.id}`" if inviter else "Desconhecido",  
-                inline=True  
-            )  
-            em.add_field(  
-                name="🔗 Código do Convite",  
-                value=f"`{invite_usado.code}`\nUsos: `{invite_usado.uses}`" if invite_usado else "Desconhecido",  
-                inline=False  
-            )  
-            em.add_field(  
-                name="📅 Conta Criada em",  
-                value=member.created_at.strftime("%d/%m/%Y às %H:%M"),  
-                inline=True  
-            )  
-            em.set_footer(text=member.guild.name, icon_url=member.guild.icon.url if member.guild.icon else None)  
-            await canal_convites.send(embed=em)  
-    except Exception as e:  
-        print(f"Erro no rastreamento de convite: {e}")
+# ================== LEAVE ==================
 
 @bot.event
 async def on_member_remove(member):
-
     if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
         return
 
-embed = discord.Embed(title="❌ Membro Saiu", color=0xFF0000, timestamp=datetime.datetime.utcnow())
-embed.set_author(name=str(member), icon_url=member.avatar.url if member.avatar else None)
-embed.add_field(name="Usuário", value=f"{member} ({member.id})", inline=False)
-embed.set_footer(text=member.guild.name)
+    embed = discord.Embed(
+        title="Saiu do servidor",
+        color=0xFF0000
+    )
 
-channel = bot.get_channel(LOG_ENTRADA)  
+    embed.add_field(name="Usuário", value=str(member))
+
+    channel = bot.get_channel(LOG_ENTRADA)
+    if channel:
+        await channel.send(embed=embed)
 
 # ================== VOICE ==================
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-
     if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
         return
-
     if before.channel == after.channel:
         return
-        
-if before.channel is None and after.channel is not None:  
-    title, color = "🎙 Entrou na Call", 0x00AAFF  
-    canal = after.channel.name  
-elif before.channel is not None and after.channel is None:  
-    title, color = "📴 Saiu da Call", 0xFF8800  
-    canal = before.channel.name  
-else:  
-    return  
 
+    if before.channel is None:
+        title = "Entrou call"
+    elif after.channel is None:
+        title = "Saiu call"
+    else:
+        return
 
-embed = discord.Embed(title=title, color=color, timestamp=datetime.datetime.utcnow())  
-embed.add_field(name="Usuário", value=member.mention, inline=True)  
-embed.add_field(name="Canal", value=canal, inline=True)  
-embed.set_footer(text=member.guild.name)  
+    embed = discord.Embed(title=title, color=0x00AAFF)
+    embed.add_field(name="Usuário", value=member.mention)
 
+    channel = bot.get_channel(LOG_CHAMADAS)
+    if channel:
+        await channel.send(embed=embed)
 
-channel = bot.get_channel(LOG_CHAMADAS)  
-
-# ================== SEGURANÇA (AutoMod + Raid) ==================
+# ================== AUTO MOD ==================
 
 @bot.event
 async def on_auto_moderation_action_execution(action):
-
     if action.guild_id not in (GUILD_PRINCIPAL, GUILD_SIEX):
         return
-        
-embed = discord.Embed(title="🛡️ Ação do AutoMod", color=0xFF00FF, timestamp=datetime.datetime.utcnow())  
-embed.add_field(name="Usuário", value=action.member.mention if action.member else "?", inline=True)  
-embed.add_field(name="Ação", value=action.action_type.name, inline=True)  
-embed.add_field(name="Motivo", value=action.reason or "AutoMod", inline=False)  
-embed.set_footer(text=action.guild.name)  
 
+    embed = discord.Embed(
+        title="AutoMod",
+        color=0xFF00FF
+    )
 
-channel = bot.get_channel(LOG_SEGURANCA)  
+    channel = bot.get_channel(LOG_SEGURANCA)
+    if channel:
+        await channel.send(embed=embed)
 
 # =========================================================
 # SISTEMA ULTRA AVANÇADO DE EMBEDS
@@ -624,9 +418,11 @@ class EmbedPanel(discord.ui.View):
         )
 
         embed.set_footer(
-            text="Sistema Militar de Embeds"
+            text="Sistema de Embeds"
         )
 
+
+    
         embed.timestamp = datetime.datetime.utcnow()
 
         return embed
@@ -639,6 +435,7 @@ class EmbedPanel(discord.ui.View):
             if isinstance(item, EmbedSelector):
                 self.remove_item(item)
 
+    
         self.add_item(EmbedSelector(self))
 
     # =====================================================
@@ -876,10 +673,9 @@ class EmbedPanel(discord.ui.View):
         )
 
         await interaction.response.send_message(
-        embed=view.embeds[0],
-        view=view,
-        ephemeral=True
-    )
+            file=file,
+            ephemeral=True
+        )
 
     # =====================================================
     # TIMEOUT
@@ -913,11 +709,10 @@ async def criar(interaction: discord.Interaction):
         embed=view.embeds[0],
         view=view,
         ephemeral=True
-)
+        )
 
-# ================== RODAR O BOT ================
+# ================== BOT RUN ==================
 
-import os
 token = os.environ.get("DISCORD_TOKEN")
 
 keep_alive()
