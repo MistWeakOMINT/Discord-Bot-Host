@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 import datetime
 
-================== CONFIG ==================
+# ================== CONFIG ==================
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -15,7 +15,7 @@ intents.auto_moderation = True  # Para logs de AutoMod
 
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
-================== IDs ==================
+# ================== IDs ==================
 
 GUILD_PRINCIPAL = 1135558598857068564   # ← Troque: Vila Militar • Roleplay
 GUILD_SIEX = 1499872178039029792        # ← Troque: 6° D Sup - SIEx
@@ -58,7 +58,7 @@ async def on_invite_delete(invite):
 if invite.guild.id == GUILD_SIEX:
 invite_cache.get(GUILD_SIEX, {}).pop(invite.code, None)
 
-================== MENSAGENS ==================
+# ================== MENSAGENS ==================
 
 @bot.event
 async def on_message(message):
@@ -104,7 +104,7 @@ embed.set_footer(text=before.guild.name)
 channel = bot.get_channel(LOG_TEXTO)  
 if channel: await channel.send(embed=embed)
 
-================== AUDIT LOG (Cargos, Punições, Convites) ==================
+# ================== AUDIT LOG (Cargos, Punições, Convites) ==================
 
 @bot.event
 async def on_audit_log_entry_create(entry):
@@ -156,7 +156,7 @@ elif entry.action == discord.AuditLogAction.invite_create:
     channel = bot.get_channel(LOG_CONVITES)  
     if channel: await channel.send(embed=embed)
 
-================== JOIN / LEAVE ==================
+# ================== JOIN / LEAVE ==================
 
 @bot.event
 async def on_member_join(member):
@@ -230,7 +230,7 @@ embed.set_footer(text=member.guild.name)
 channel = bot.get_channel(LOG_ENTRADA)  
 if channel: await channel.send(embed=embed)
 
-================== VOICE ==================
+# ================== VOICE ==================
 
 @bot.event
 async def on_voice_state_update(member, before, after):
@@ -256,7 +256,7 @@ embed.set_footer(text=member.guild.name)
 channel = bot.get_channel(LOG_CHAMADAS)  
 if channel: await channel.send(embed=embed)
 
-================== SEGURANÇA (AutoMod + Raid) ==================
+# ================== SEGURANÇA (AutoMod + Raid) ==================
 
 @bot.event
 async def on_auto_moderation_action_execution(action):
@@ -776,7 +776,7 @@ async def criar(interaction: discord.Interaction):
         ephemeral=True
 )
 
-================== RODAR O BOT ================
+# ================== RODAR O BOT ================
 
 import os
 token = os.environ.get("DISCORD_TOKEN")
