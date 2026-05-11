@@ -86,19 +86,27 @@ async def on_invite_delete(invite):
 
 @bot.event
 async def on_message(message):
-if message.guild and message.guild.id in (GUILD_PRINCIPAL, GUILD_SIEX):
-message_cache[message.id] = message
-if len(message_cache) > 5000:  # Limita memória
-for old_id in list(message_cache.keys())[:-4000]:
-message_cache.pop(old_id, None)
+
+    if message.guild and message.guild.id in (GUILD_PRINCIPAL, GUILD_SIEX):
+
+        message_cache[message.id] = message
+
+        if len(message_cache) > 5000:
+
+            for old_id in list(message_cache.keys())[:-4000]:
+
+                message_cache.pop(old_id, None)
 
 @bot.event
 async def on_raw_message_delete(payload):
-msg = message_cache.pop(payload.message_id, None)
-if not msg or msg.author.bot:
-return
-if payload.guild_id not in (GUILD_PRINCIPAL, GUILD_SIEX):
-return
+
+    msg = message_cache.pop(payload.message_id, None)
+
+    if not msg or msg.author.bot:
+        return
+
+    if payload.guild_id not in (GUILD_PRINCIPAL, GUILD_SIEX):
+        return
 
 embed = discord.Embed(title="🗑 Mensagem Apagada", description=msg.content[:1000] or "*Sem conteúdo*", color=0xFF0000, timestamp=datetime.datetime.utcnow())  
 embed.set_author(name=str(msg.author), icon_url=msg.author.avatar.url if msg.author.avatar else None)  
@@ -111,11 +119,13 @@ if channel: await channel.send(embed=embed)
 
 @bot.event
 async def on_message_edit(before, after):
-if before.content == after.content or before.author.bot:
-return
-if before.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
-return
 
+    if before.content == after.content or before.author.bot:
+        return
+
+    if before.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
+        return
+        
 embed = discord.Embed(title="✏️ Mensagem Editada", color=0xFFD700, timestamp=datetime.datetime.utcnow())  
 embed.set_author(name=str(before.author), icon_url=before.author.avatar.url if before.author.avatar else None)  
 embed.add_field(name="Autor", value=before.author.mention, inline=True)  
@@ -132,8 +142,9 @@ if channel: await channel.send(embed=embed)
 
 @bot.event
 async def on_audit_log_entry_create(entry):
-if entry.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
-return
+
+    if entry.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
+        return
 
 # CARGOS  
 if entry.action == discord.AuditLogAction.member_role_update:  
@@ -184,7 +195,9 @@ elif entry.action == discord.AuditLogAction.invite_create:
 
 @bot.event
 async def on_member_join(member):
-if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX): return
+
+    if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
+        return
 
 embed = discord.Embed(title="✅ Novo Membro", color=0x00FF00, timestamp=datetime.datetime.utcnow())  
 embed.set_author(name=str(member), icon_url=member.avatar.url if member.avatar else None)  
@@ -245,7 +258,10 @@ if member.guild.id == GUILD_SIEX:
 
 @bot.event
 async def on_member_remove(member):
-if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX): return
+
+    if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
+        return
+
 embed = discord.Embed(title="❌ Membro Saiu", color=0xFF0000, timestamp=datetime.datetime.utcnow())
 embed.set_author(name=str(member), icon_url=member.avatar.url if member.avatar else None)
 embed.add_field(name="Usuário", value=f"{member} ({member.id})", inline=False)
@@ -258,9 +274,13 @@ if channel: await channel.send(embed=embed)
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX): return
-if before.channel == after.channel: return
 
+    if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
+        return
+
+    if before.channel == after.channel:
+        return
+        
 if before.channel is None and after.channel is not None:  
     title, color = "🎙 Entrou na Call", 0x00AAFF  
     canal = after.channel.name  
@@ -284,9 +304,10 @@ if channel: await channel.send(embed=embed)
 
 @bot.event
 async def on_auto_moderation_action_execution(action):
-if action.guild_id not in (GUILD_PRINCIPAL, GUILD_SIEX):
-return
 
+    if action.guild_id not in (GUILD_PRINCIPAL, GUILD_SIEX):
+        return
+        
 embed = discord.Embed(title="🛡️ Ação do AutoMod", color=0xFF00FF, timestamp=datetime.datetime.utcnow())  
 embed.add_field(name="Usuário", value=action.member.mention if action.member else "?", inline=True)  
 embed.add_field(name="Ação", value=action.action_type.name, inline=True)  
@@ -762,9 +783,10 @@ class EmbedPanel(discord.ui.View):
         )
 
         await interaction.response.send_message(
-            file=file,
-            ephemeral=True
-        )
+        embed=view.embeds[0],
+        view=view,
+        ephemeral=True
+    )
 
     # =====================================================
     # TIMEOUT
