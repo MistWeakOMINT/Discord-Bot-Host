@@ -61,17 +61,17 @@ async  def  on_invite_create ( invite ) :
 
 @ bot.event
 async  def  on_invite_delete ( invite ) :
-    se invite.guild.id == GUILD_SIEX :​
+    if invite.guild.id == GUILD_SIEX:​
         invite_cache.get ( GUILD_SIEX , { } ) . pop ( invite.code , None )​
 
 
 # ================== MENSAGENS ==================
 @ bot.event
 async  def  on_message ( mensagem ) :
-    se message.guild e message.guild.id  em ( GUILD_PRINCIPAL , GUILD_SIEX ) :​​  
+    if message.guild e message.guild.id  em ( GUILD_PRINCIPAL , GUILD_SIEX ):​​  
         cache_de_mensagens [ mensagem. id ] = mensagem
         if  len ( message_cache ) > 5000 :   # Limite de memória
-            para old_id em  list ( message_cache. keys ( ) ) [ :- 4000 ] :
+            para old_id em  list ( message_cache. keys ( ) ) [ :- 4000 ]:
                 message_cache.pop ( old_id , None )
 
 
