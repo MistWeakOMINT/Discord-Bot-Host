@@ -125,18 +125,48 @@ async def on_message_edit(before, after):
 
     if before.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
         return
-        
-embed = discord.Embed(title="✏️ Mensagem Editada", color=0xFFD700, timestamp=datetime.datetime.utcnow())  
-embed.set_author(name=str(before.author), icon_url=before.author.avatar.url if before.author.avatar else None)  
-embed.add_field(name="Autor", value=before.author.mention, inline=True)  
-embed.add_field(name="Canal", value=before.channel.mention, inline=True)  
-embed.add_field(name="Antes", value=before.content[:500] or "*Vazio*", inline=False)  
-embed.add_field(name="Depois", value=after.content[:500] or "*Vazio*", inline=False)  
-embed.set_footer(text=before.guild.name)  
 
+    embed = discord.Embed(
+        title="✏️ Mensagem Editada",
+        color=0xFFD700,
+        timestamp=datetime.datetime.utcnow()
+    )
 
-channel = bot.get_channel(LOG_TEXTO)  
-if channel: await channel.send(embed=embed)
+    embed.set_author(
+        name=str(before.author),
+        icon_url=before.author.avatar.url if before.author.avatar else None
+    )
+
+    embed.add_field(
+        name="Autor",
+        value=before.author.mention,
+        inline=True
+    )
+
+    embed.add_field(
+        name="Canal",
+        value=before.channel.mention,
+        inline=True
+    )
+
+    embed.add_field(
+        name="Antes",
+        value=before.content[:500] or "*Vazio*",
+        inline=False
+    )
+
+    embed.add_field(
+        name="Depois",
+        value=after.content[:500] or "*Vazio*",
+        inline=False
+    )
+
+    embed.set_footer(text=before.guild.name)
+
+    channel = bot.get_channel(LOG_TEXTO)
+
+    if channel:
+        await channel.send(embed=embed)
 
 # ================== AUDIT LOG (Cargos, Punições, Convites) ==================
 
