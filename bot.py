@@ -246,8 +246,8 @@ async def on_member_remove(member):
 
 
 # ================== VOICE ==================
-@bot.event
-async def on_voice_state_update(member, before, after):
+@bot.listen()
+async def on_voice_state_update_tempcalls(member, before, after):
     if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX): return
     if before.channel == after.channel: return
 
