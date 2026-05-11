@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 GUILD_PRINCIPAL = 1135558598857068564   # ← Troque: Vila Militar • Roleplay
 GUILD_SIEX = 1499872178039029792        # ← Troque: 6° D Sup - SIEx
 
-Canais de Logs no SIEx
+# Canais de Logs no SIEx
 
 LOG_TEXTO = 1499872178986942539       # registro-op-texto
 LOG_CARGOS = 1499872178986942541      # registro-op-cargos
