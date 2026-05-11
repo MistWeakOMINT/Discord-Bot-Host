@@ -1,97 +1,95 @@
 from keep_alive import keep_alive
 from ponto import setup_ponto
-import discord
 from discord.ext import commands
-import datetim
 from discord import app_commands
 
 
-# ================== CONFIG ==================
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
-intents.voice_states = True
-intents.moderation = True
-intents.auto_moderation = True  # Para logs de AutoMod
+# ================== CONFIGURAÇÃO ==================
+intenções = discord . Intenções.default ( )
+intenções. conteúdo_da_mensagem = Verdadeiro
+intenções. membros = Verdadeiro
+intenções. estados_de_voz = Verdadeiro
+intenções. moderação = Verdadeiro
+intents. auto_moderation = True   # Para logs de AutoMod
 
 
-bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+bot = comandos.Bot ( command_prefix= "!" , intents=intents, help_command= None )
 
 
 # ================== IDs ==================
-GUILD_PRINCIPAL = 1135558598857068564   # ← Troque: Vila Militar • Roleplay
-GUILD_SIEX = 1499872178039029792        # ← Troque: 6° D Sup - SIEx
+GUILD_PRINCIPAL = 1135558598857068564    # ← Troque: Vila Militar • Roleplay
+GUILD_SIEX = 1499872178039029792         # ← Troque: 6° D Sup - SIEx
 
 
 # Canais de Logs no SIEx
-LOG_TEXTO = 1499872178986942539       # registro-op-texto
-LOG_CARGOS = 1499872178986942541      # registro-op-cargos
-LOG_ENTRADA = 1499872178986942543     # registro-op-entrada
-LOG_CONVITES = 1499872178986942544    # registro-op-convites
-LOG_PUNICOES = 1499872179234541788    # registro-op-punições
-LOG_CHAMADAS = 1499872179234541789    # registro-op-chamadas
-LOG_SEGURANCA = 1499872179234541791   # registro-op-segurança
+LOG_TEXTO = 1499872178986942539        #registro-op-texto
+LOG_CARGOS = 1499872178986942541       #registro-op-cargos
+LOG_ENTRADA = 1499872178986942543      #registro-op-entrada
+LOG_CONVITES= 1499872178986942544     #registro-op-convites
+LOG_PUNICOES = 1499872179234541788     # registro-op-punições
+LOG_CHAMADAS = 1499872179234541789     #registro-op-chamadas
+LOG_SEGURANCA = 1499872179234541791    #registro-op-segurança
 
 
-message_cache = {}
-invite_cache = {}
+cache_de_mensagens = { }
+invite_cache = { }
 
 
-@bot.event
-async def on_ready():
-    setup_ponto(bot)
-    await bot.tree.sync()
-    print(f"✅ Bot online como {bot.user}")
-    print(f"✅ Slash commands sincronizados")
-    print(f"Conectado em: {[g.name for g in bot.guilds]}")
-    guild = bot.get_guild(GUILD_SIEX)
-    if guild:
-        try:
-            invites = await guild.invites()
-            invite_cache[GUILD_SIEX] = {inv.code: inv.uses for inv in invites}
-        except Exception as e:
-            print(f"Erro ao cachear convites: {e}")
+@ bot.event
+async  def  on_ready ( ) :
+    setup_ponto ( bot )
+    aguarde bot. árvore . sincronize ( )
+    print ( f"✅ Bot online como { bot. user } " )
+    print ( f"✅ Comandos de barra sincronizados" )
+    print ( f"Conectado em: { [ g. nome  para g em bot. guildas ] } " )
+    guilda = bot.get_guild ( GUILDA_SIEX )
+    se for guilda:
+        tentar :
+            convites = aguarde guilda.convites ( )
+            invite_cache [ GUILD_SIEX ] = { código do convite : usos  do convite para convites }
+        exceto Exception como e:
+            print ( f"Erro ao cachear convites: { e } " )
 
 
-@bot.event
-async def on_invite_create(invite):
-    if invite.guild.id == GUILD_SIEX:
-        invite_cache.setdefault(GUILD_SIEX, {})[invite.code] = invite.uses
+@ bot.event
+async  def  on_invite_create ( invite ) :
+    se invite.guild.id == GUILD_SIEX :​
+        invite_cache.setdefault ( GUILD_SIEX , { } ) [ invite.code ] = invite.uses​
 
 
-@bot.event
-async def on_invite_delete(invite):
-    if invite.guild.id == GUILD_SIEX:
-        invite_cache.get(GUILD_SIEX, {}).pop(invite.code, None)
+@ bot.event
+async  def  on_invite_delete ( invite ) :
+    se invite.guild.id == GUILD_SIEX :​
+        invite_cache.get ( GUILD_SIEX , { } ) . pop ( invite.code , None )​
 
 
 # ================== MENSAGENS ==================
-@bot.event
-async def on_message(message):
-    if message.guild and message.guild.id in (GUILD_PRINCIPAL, GUILD_SIEX):
-        message_cache[message.id] = message
-        if len(message_cache) > 5000:  # Limita memória
-            for old_id in list(message_cache.keys())[:-4000]:
-                message_cache.pop(old_id, None)
+@ bot.event
+async  def  on_message ( mensagem ) :
+    se message.guild e message.guild.id  em ( GUILD_PRINCIPAL , GUILD_SIEX ) :​​  
+        cache_de_mensagens [ mensagem. id ] = mensagem
+        if  len ( message_cache ) > 5000 :   # Limite de memória
+            para old_id em  list ( message_cache. keys ( ) ) [ :- 4000 ] :
+                message_cache.pop ( old_id , None )
 
 
-@bot.event
-async def on_raw_message_delete(payload):
-    msg = message_cache.pop(payload.message_id, None)
-    if not msg or msg.author.bot:
-        return
-    if payload.guild_id not in (GUILD_PRINCIPAL, GUILD_SIEX):
-        return
+@ bot.event
+async  def  on_raw_message_delete ( payload ) :
+msg =     message_cache.pop ( payload.message_id , None )
+    se  não for msg ou msg. autor . bot :
+        retornar
+    se payload.guild_id não estiver em ( GUILD_PRINCIPAL  , GUILD_SIEX ) :  
+        retornarreturn
 
 
-    embed = discord.Embed(title="🗑 Mensagem Apagada", description=msg.content[:1000] or "*Sem conteúdo*", color=0xFF0000, timestamp=datetime.datetime.utcnow())
-    embed.set_author(name=str(msg.author), icon_url=msg.author.avatar.url if msg.author.avatar else None)
-    embed.add_field(name="Autor", value=msg.author.mention, inline=True)
-    embed.add_field(name="Canal", value=msg.channel.mention, inline=True)
-    embed.set_footer(text=f"{msg.guild.name} • ID: {msg.author.id}")
+    embed = discord.Embed(title="🗑 Mensagem Apagada", description=msg.content[:1000] ou "*Sem conteúdo*", color=0xFF0000, timestamp=datetime.datetime.utcnow())Embed(title="🗑 Mensagem Apagada", description=msg.content[:1000] or "*Sem conteúdo*", color=0xFF0000, timestamp=datetime.datetime.utcnow())
+    embed.set_author(name=str(msg.author), icon_url=msg.author.avatar.url if msg.author.avatar else None)set_author(name=str(msg.author), icon_url=msg.author.avatar.url if msg.author.avatar else None)
+    embed.add_field(name="Autor", value=msg.author.mention, inline=True)add_field(name="Autor", value=msg.author.mention, inline=True)
+    embed.add_field(name="Canal", value=msg.channel.mention, inline=True)add_field(name="Canal", value=msg.channel.mention, inline=True)
+    embed.set_footer(text=f"{msg.guild.name} • ID: {msg.author.id}")set_footer(text=f"{msg.guild.name} • ID: {msg.author.id}")
 
-    channel = bot.get_channel(LOG_TEXTO)
-    if channel: await channel.send(embed=embed)
+    canal = bot.get_channel(LOG_TEXTO)get_channel(LOG_TEXTO)
+    se for um canal: aguarde o canal.send(embed=embed)if channel: await channel.send(embed=embed)
 
 
 @bot.event
