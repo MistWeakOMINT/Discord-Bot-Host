@@ -36,18 +36,19 @@ invite_cache = {}
 
 @bot.event
 async def on_ready():
-setup_ponto(bot)
-await bot.tree.sync()
-print(f"✅ Bot online como {bot.user}")
-print(f"✅ Slash commands sincronizados")
-print(f"Conectado em: {[g.name for g in bot.guilds]}")
-guild = bot.get_guild(GUILD_SIEX)
-if guild:
-try:
-invites = await guild.invites()
-invite_cache[GUILD_SIEX] = {inv.code: inv.uses for inv in invites}
-except Exception as e:
-print(f"Erro ao cachear convites: {e}")
+    setup_ponto(bot)
+    await setup_security(bot)  # ← ADICIONE ESTA LINHA
+    await bot.tree.sync()
+    print(f"✅ Bot online como {bot.user}")
+    print(f"✅ Slash commands sincronizados")
+    print(f"Conectado em: {[g.name for g in bot.guilds]}")
+    guild = bot.get_guild(GUILD_SIEX)
+    if guild:
+        try:
+            invites = await guild.invites()
+            invite_cache[GUILD_SIEX] = {inv.code: inv.uses for inv in invites}
+        except Exception as e:
+            print(f"Erro ao cachear convites: {e}")
 
 @bot.event
 async def on_invite_create(invite):
