@@ -791,6 +791,357 @@ async def criar(interaction: discord.Interaction):
         ephemeral=True
     )
 
+# =========================================================
+# SISTEMA ULTRA AVANÇADO DE CLEAR
+# COMANDO: /limpar quantidade
+# MÍNIMO: 10
+# MÁXIMO: 100000
+# =========================================================
+
+@bot.tree.command(
+    name="limpar",
+    description="Limpa mensagens do chat"
+)
+@app_commands.describe(
+    quantidade="Quantidade de mensagens para apagar"
+)
+async def limpar(
+    interaction: discord.Interaction,
+    quantidade: int
+):
+
+    # =====================================================
+    # PERMISSÃO
+    # =====================================================
+
+    if not interaction.user.guild_permissions.manage_messages:
+
+        embed = discord.Embed(
+            title="❌ Sem Permissão",
+            description="Você precisa da permissão `Gerenciar Mensagens`.",
+            color=0xFF0000
+        )
+
+        return await interaction.response.send_message(
+            embed=embed,
+            ephemeral=True
+        )
+
+    # =====================================================
+    # VALIDAÇÃO
+    # =====================================================
+
+    if quantidade < 10:
+
+        embed = discord.Embed(
+            title="⚠ Quantidade inválida",
+            description="O mínimo permitido é **10 mensagens**.",
+            color=0xFFAA00
+        )
+
+        return await interaction.response.send_message(
+            embed=embed,
+            ephemeral=True
+        )
+
+    if quantidade > 100000:
+
+        embed = discord.Embed(
+            title="⚠ Limite excedido",
+            description="O máximo permitido é **100000 mensagens**.",
+            color=0xFF0000
+        )
+
+        return await interaction.response.send_message(
+            embed=embed,
+            ephemeral=True
+        )
+
+    # =====================================================
+    # INÍCIO
+    # =====================================================
+
+    await interaction.response.defer(ephemeral=True)
+
+    apagadas = 0
+
+    try:
+
+        while apagadas < quantidade:
+
+            restante = quantidade - apagadas
+
+            pegar = min(restante, 100)
+
+            mensagens = [
+                message async for message in interaction.channel.history(
+                    limit=pegar
+                )
+            ]
+
+            if not mensagens:
+                break
+
+            try:
+                await interaction.channel.delete_messages(mensagens)
+                apagadas += len(mensagens)
+
+            except:
+
+                for msg in mensagens:
+                    try:
+                        await msg.delete()
+                        apagadas += 1
+                    except:
+                        pass
+
+        # =================================================
+        # SUCESSO
+        # =================================================
+
+        embed = discord.Embed(
+            title="🧹 Chat Limpo",
+            description=(
+                f"✅ Foram apagadas "
+                f"**{apagadas} mensagens**."
+            ),
+            color=0x00FF88
+        )
+
+        embed.set_footer(
+            text=f"Ação executada por {interaction.user}"
+        )
+
+        embed.timestamp = datetime.datetime.utcnow()
+
+        await interaction.followup.send(
+            embed=embed,
+            ephemeral=True
+        )
+
+    except Exception as e:
+
+        erro = discord.Embed(
+            title="❌ Erro ao limpar",
+            description=f"```py\n{e}\n```",
+            color=0xFF0000
+        )
+
+        await interaction.followup.send(
+            embed=erro,
+            ephemeral=True
+        )
+
+# =========================================================
+# SISTEMA DE CALL PRIVADA AUTOMÁTICA
+# =========================================================
+
+# ID DA CALL GERADORA
+CALL_CREATE_ID = 1502511323185938552
+
+# CALLS CRIADAS
+temporary_calls = {}
+
+# =========================================================
+# GERADOR DE NOMES
+# =========================================================
+
+def gerar_nome_call(guild):
+
+    numeros = [
+        "¹","²","³","⁴","⁵",
+        "⁶","⁷","⁸","⁹","¹⁰",
+        "¹¹","¹²","¹³","¹⁴","¹⁵",
+        "¹⁶","¹⁷","¹⁸","¹⁹","²⁰",
+        "²¹","²²","²³","²⁴","²⁵",
+        "²⁶","²⁷","²⁸","²⁹","³⁰",
+        "³¹","³²","³³","³⁴","³⁵",
+        "³⁶","³⁷","³⁸","³⁹","⁴⁰",
+        "⁴¹","⁴²","⁴³","⁴⁴","⁴⁵",
+        "⁴⁶","⁴⁷","⁴⁸","⁴⁹","⁵⁰",
+        "⁵¹","⁵²","⁵³","⁵⁴","⁵⁵",
+        "⁵⁶","⁵⁷","⁵⁸","⁵⁹","⁶⁰",
+        "⁶¹","⁶²","⁶³","⁶⁴","⁶⁵",
+        "⁶⁶","⁶⁷","⁶⁸","⁶⁹","⁷⁰",
+        "⁷¹","⁷²","⁷³","⁷⁴","⁷⁵",
+        "⁷⁶","⁷⁷","⁷⁸","⁷⁹","⁸⁰",
+        "⁸¹","⁸²","⁸³","⁸⁴","⁸⁵",
+        "⁸⁶","⁸⁷","⁸⁸","⁸⁹","⁹⁰",
+        "⁹¹","⁹²","⁹³","⁹⁴","⁹⁵",
+        "⁹⁶","⁹⁷","⁹⁸","⁹⁹","¹⁰⁰"
+    ]
+
+    usados = []
+
+    for channel in guild.voice_channels:
+
+        if channel.name.startswith("Call"):
+
+            usados.append(channel.name)
+
+    for numero in numeros:
+
+        nome = f"Call{numero}"
+
+        if nome not in usados:
+            return nome
+
+    return "Call Extra"
+
+# =========================================================
+# CRIAR CALL
+# =========================================================
+
+@bot.event
+async def on_voice_state_update(member, before, after):
+
+    # =====================================================
+    # ENTRAR NA CALL GERADORA
+    # =====================================================
+
+    if after.channel and after.channel.id == CALL_CREATE_ID:
+
+        categoria = after.channel.category
+
+        nome_call = gerar_nome_call(member.guild)
+
+        overwrites = {
+
+            member.guild.default_role: discord.PermissionOverwrite(
+                connect=True,
+                view_channel=True
+            ),
+
+            member: discord.PermissionOverwrite(
+                manage_channels=True,
+                move_members=True,
+                mute_members=True,
+                deafen_members=True
+            )
+        }
+
+        call = await member.guild.create_voice_channel(
+            name=nome_call,
+            category=categoria,
+            overwrites=overwrites,
+            bitrate=64000,
+            user_limit=0
+        )
+
+        temporary_calls[call.id] = member.id
+
+        await member.move_to(call)
+
+        try:
+
+            embed = discord.Embed(
+                title="🎙 Call Criada",
+                description=(
+                    f"Sua call privada foi criada.\n\n"
+                    f"🔒 Use `/fechar` para trancar a call."
+                ),
+                color=0x00FF88
+            )
+
+            embed.add_field(
+                name="📞 Canal",
+                value=call.mention
+            )
+
+            embed.timestamp = datetime.datetime.utcnow()
+
+            await member.send(embed=embed)
+
+        except:
+            pass
+
+    # =====================================================
+    # DELETAR CALL VAZIA
+    # =====================================================
+
+    if before.channel:
+
+        if before.channel.id in temporary_calls:
+
+            if len(before.channel.members) == 0:
+
+                try:
+                    del temporary_calls[before.channel.id]
+                except:
+                    pass
+
+                await before.channel.delete()
+
+# =========================================================
+# FECHAR CALL
+# =========================================================
+
+@bot.tree.command(
+    name="fechar",
+    description="Fecha sua call privada"
+)
+async def fechar(interaction: discord.Interaction):
+
+    canal = interaction.user.voice.channel if interaction.user.voice else None
+
+    if not canal:
+
+        embed = discord.Embed(
+            title="❌ Você não está em uma call",
+            color=0xFF0000
+        )
+
+        return await interaction.response.send_message(
+            embed=embed,
+            ephemeral=True
+        )
+
+    if canal.id not in temporary_calls:
+
+        embed = discord.Embed(
+            title="❌ Esta call não é temporária",
+            color=0xFF0000
+        )
+
+        return await interaction.response.send_message(
+            embed=embed,
+            ephemeral=True
+        )
+
+    dono = temporary_calls[canal.id]
+
+    if interaction.user.id != dono:
+
+        embed = discord.Embed(
+            title="❌ Apenas o dono da call pode fechar",
+            color=0xFF0000
+        )
+
+        return await interaction.response.send_message(
+            embed=embed,
+            ephemeral=True
+        )
+
+    await canal.set_permissions(
+        interaction.guild.default_role,
+        connect=False
+    )
+
+    embed = discord.Embed(
+        title="🔒 Call Fechada",
+        description=(
+            "A call foi trancada.\n"
+            "Quando todos saírem, ela será deletada."
+        ),
+        color=0x5865F2
+    )
+
+    embed.timestamp = datetime.datetime.utcnow()
+
+    await interaction.response.send_message(
+        embed=embed
+        )
+
 # ================== RODAR O BOT ================
 import os
 token = os.environ.get("DISCORD_TOKEN")
