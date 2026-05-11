@@ -1,5 +1,6 @@
 from keep_alive import keep_alive
 from ponto import setup_ponto
+from security import setup_security
 import discord
 from discord.ext import commands
 import datetime
@@ -280,7 +281,7 @@ embed.set_footer(text=member.guild.name)
 channel = bot.get_channel(LOG_CHAMADAS)  
 if channel: await channel.send(embed=embed)
 
-================== SEGURANÇA (AutoMod + Raid) ==================
+# ================== SEGURANÇA (AutoMod + Raid) ==================
 
 @bot.event
 async def on_auto_moderation_action_execution(action):
@@ -819,7 +820,7 @@ async def criar(interaction: discord.Interaction):
         ephemeral=True
     )
 
-================== RODAR O BOT ================
+# ================== RODAR O BOT ================
 
 import os
 token = os.environ.get("DISCORD_TOKEN")
