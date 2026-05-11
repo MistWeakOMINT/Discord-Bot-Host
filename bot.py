@@ -220,13 +220,89 @@ async def on_member_join(member):
     if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX):
         return
 
-embed = discord.Embed(title="✅ Novo Membro", color=0x00FF00, timestamp=datetime.datetime.utcnow())  
-embed.set_author(name=str(member), icon_url=member.avatar.url if member.avatar else None)  
-embed.add_field(name="Usuário", value=f"{member.mention} (`{member.id}`)", inline=False)  
-embed.add_field(name="Conta criada", value=member.created_at.strftime("%d/%m/%Y às %H:%M"), inline=True)  
-embed.set_footer(text=member.guild.name)  
+    embed = discord.Embed(
+        title="✅ Novo Membro",
+        color=0x00FF00,
+        timestamp=datetime.datetime.utcnow()
+    )
 
-channel = bot.get_channel(LOG_ENTRADA)  
+    embed.set_author(
+        name=str(member),
+        icon_url=member.avatar.url if member.avatar else None
+    )
+
+    embed.add_field(
+        name="Usuário",
+        value=f"{member.mention} (`{member.id}`)",
+        inline=False
+    )
+
+    embed.add_field(
+        name="Conta criada",
+        value=member.created_at.strftime("%d/%m/%Y às %H:%M"),
+        inline=True
+    )
+
+    embed.set_footer(text=member.guild.name)
+
+    channel = bot.get_channel(LOG_ENTRADA)
+
+    if channel:
+        await channel.send(embed=embed)
+
+    # ================== CONVITES ==================
+
+    if member.guild.id == GUILD_SIEX:
+
+        try:
+
+            invites_antes = invite_cache.get(GUILD_SIEX, {})
+
+            invites_agora = await member.guild.invites()
+
+            invite_cache[GUILD_SIEX] = {
+                inv.code: inv.uses
+                for inv in invites_agora
+            }
+
+            invite_usado = None
+            inviter = None
+
+            for inv in invites_agora:
+
+                uses_antes = invites_antes.get(inv.code, 0)
+
+                if inv.uses > uses_antes:
+                    invite_usado = inv
+                    inviter = inv.inviter
+                    break
+
+            canal_convites = bot.get_channel(LOG_CONVITES)
+
+            if canal_convites:
+
+                em = discord.Embed(
+                    title="📨 Novo Membro por Convite",
+                    color=0x5865F2,
+                    timestamp=datetime.datetime.utcnow()
+                )
+
+                em.add_field(
+                    name="Membro",
+                    value=f"{member.mention} (`{member.id}`)",
+                    inline=True
+                )
+
+                em.add_field(
+                    name="Convidado por",
+                    value=inviter.mention if inviter else "Desconhecido",
+                    inline=True
+                )
+
+                await canal_convites.send(embed=em)
+
+        except Exception as e:
+            print(f"Erro convites: {e}")
 
 # ================== RASTREAMENTO DE CONVITES ==================  
 if member.guild.id == GUILD_SIEX:  
