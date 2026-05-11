@@ -31,7 +31,8 @@ def init_db():
 # ================== UTILITÁRIOS ==================
 def format_duration(td: datetime.timedelta) -> str:
     total = int(td.total_seconds())
-    if total < 0: total = 0
+    if total < 0:
+        total = 0
     h = total // 3600
     m = (total % 3600) // 60
     s = total % 60
@@ -168,7 +169,7 @@ class PontoView(View):
 def setup_ponto(bot):
     init_db()
 
-    # ── /ponto ──────────────────────────────────────────────────────────────
+    # ── /ponto ──────────────────────────────────────────────────────────
     @bot.tree.command(name="ponto", description="Painel de controle do ponto eletronico")
     async def cmd_ponto(interaction: discord.Interaction):
         conn = get_db()
@@ -222,7 +223,7 @@ def setup_ponto(bot):
 
         await interaction.response.send_message(embed=em, view=PontoView())
 
-    # ── /relatorios ──────────────────────────────────────────────────────────
+    # ── /relatorios ────────────────────────────────────────────────────────
     @bot.tree.command(name="relatorios", description="Relatorios de ponto de um membro")
     @app_commands.describe(membro="Membro para visualizar (padrao: voce mesmo)")
     async def cmd_relatorios(interaction: discord.Interaction, membro: Optional[discord.Member] = None):
@@ -286,7 +287,7 @@ def setup_ponto(bot):
         em.set_footer(text=f"Exibindo {len(ultimos)} de {len(todos)} registros")
         await interaction.response.send_message(embed=em)
 
-    # ── /apagar ──────────────────────────────────────────────────────────────
+    # ── /apagar ──────────────────────────────────────────────────────────
     @bot.tree.command(name="apagar", description="Apague registros de ponto de um membro")
     @app_commands.describe(
         membro="Membro cujos registros serao apagados",
@@ -337,7 +338,7 @@ def setup_ponto(bot):
         em.set_footer(text=interaction.guild.name)
         await interaction.response.send_message(embed=em)
 
-    # ── /meu-ponto ───────────────────────────────────────────────────────────
+    # ── /meu-ponto ─────────────────────────────────────────────────────────
     @bot.tree.command(name="meu-ponto", description="Veja um resumo rapido do seu ponto")
     async def cmd_meu_ponto(interaction: discord.Interaction):
         conn = get_db()
@@ -391,10 +392,10 @@ def setup_ponto(bot):
             em.add_field(name="📡 Status", value="🔴 `Fora de Serviço`", inline=True)
 
         em.add_field(name="☀️ Horas Hoje", value=format_duration(datetime.timedelta(seconds=hoje_s)), inline=True)
-        em.add_field(name="\u200b", value="\u200b", inline=True)
+        em.add_field(name="" , value="", inline=True)
         em.add_field(name="📊 Total Acumulado", value=format_duration(datetime.timedelta(seconds=total_s)), inline=True)
         em.add_field(name="📋 Total de Registros", value=f"`{len(todos_fechados)}`", inline=True)
-        em.add_field(name="\u200b", value="\u200b", inline=True)
+        em.add_field(name="", value="", inline=True)
         em.set_footer(text="Use /ponto para registrar  •  /relatorios para historico")
         await interaction.response.send_message(embed=em)
 
