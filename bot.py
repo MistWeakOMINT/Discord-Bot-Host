@@ -164,9 +164,6 @@ async def on_message_edit(before, after):
 
     channel = bot.get_channel(LOG_TEXTO)
 
-    if channel:
-        await channel.send(embed=embed)
-
 # ================== AUDIT LOG (Cargos, Punições, Convites) ==================
 
 @bot.event
@@ -327,8 +324,6 @@ embed.set_footer(text=member.guild.name)
 
 
 channel = bot.get_channel(LOG_CHAMADAS)  
-if channel: await channel.send(embed=embed)
-
 # ================== SEGURANÇA (AutoMod + Raid) ==================
 
 @bot.event
