@@ -806,21 +806,29 @@ class EmbedPanel(discord.ui.View):
     description="Sistema avançado de embeds"
 )
 async def criar(interaction: discord.Interaction):
+    try:
+        if not interaction.user.guild_permissions.administrator:
+            return await interaction.response.send_message(
+                "❌ Apenas administradores podem usar.",
+                ephemeral=True
+            )
 
-    if not interaction.user.guild_permissions.administrator:
+        view = EmbedPanel(interaction)
 
-        return await interaction.response.send_message(
-            "❌ Apenas administradores podem usar.",
+        await interaction.response.send_message(
+            embed=view.embeds[0],
+            view=view,
             ephemeral=True
         )
-
-    view = EmbedPanel(interaction)
-
-    await interaction.response.send_message(
-        embed=view.embeds[0],
-        view=view,
-        ephemeral=True
-    )
+    except Exception as e:
+        print(f"❌ ERRO NO /criar: {e}")
+        try:
+            await interaction.response.send_message(
+                f"❌ Erro: {e}",
+                ephemeral=True
+            )
+        except:
+            pass
 
 # ================== RODAR O BOT ================
 
