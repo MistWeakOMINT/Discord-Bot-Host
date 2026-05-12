@@ -722,7 +722,7 @@ class EmbedPanel(discord.ui.View):
         label="Image",
         emoji="🖼️",
         style=discord.ButtonStyle.secondary,
-        row=2
+        row=3
     )
     async def edit_image(
         self,
