@@ -246,7 +246,9 @@ Alguns nomes permanecem nos arquivos mesmo após deixarem os corredores.***""",
 @bot.event
 async def on_member_join(member):
     if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX): 
-        await send_welcome_embed(member)
+        return
+    
+    await send_welcome_embed(member) 
     
     embed = discord.Embed(title="✅ Novo Membro", color=0x00FF00, timestamp=datetime.datetime.utcnow())  
     embed.set_author(name=str(member), icon_url=member.avatar.url if member.avatar else None)  
@@ -311,6 +313,9 @@ async def on_member_join(member):
 async def on_member_remove(member):
     if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX): 
         return
+    
+    await send_goodbye_embed(member)
+    
     embed = discord.Embed(title="❌ Membro Saiu", color=0xFF0000, timestamp=datetime.datetime.utcnow())
     embed.set_author(name=str(member), icon_url=member.avatar.url if member.avatar else None)
     embed.add_field(name="Usuário", value=f"{member} ({member.id})", inline=False)
