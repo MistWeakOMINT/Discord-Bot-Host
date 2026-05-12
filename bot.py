@@ -179,13 +179,76 @@ async def on_audit_log_entry_create(entry):
         if channel: 
             await channel.send(embed=embed)
 
+# ================== EMBEDS AVANÇADAS DE ENTRADA E SAÍDA ==================
+
+WELCOME_CHANNEL_JOIN = 1499872179842711751  # Canal de boas-vindas
+WELCOME_CHANNEL_LEAVE = 1499872179842711753  # Canal de despedida
+VERIFICATION_CHANNEL = 1502135480727109653  # Canal de verificação
+
+async def send_welcome_embed(member):
+    embed = discord.Embed(
+        title="Bem-vindo!",
+        description=f"""***Saudações, {member.mention}.
+
+Seja bem-vindo(a) ao Sistema de Inteligência do Exército.
+Este ambiente é destinado à coordenação, comunicação e organização das operações internas da corporação.
+
+**Importante:**
+Antes de prosseguir, dirija-se ao canal <#{VERIFICATION_CHANNEL}> para concluir sua identificação e liberação de acesso.
+
+Após a verificação, os demais setores do servidor serão disponibilizados conforme sua autorização.
+
+Mantenha discrição, profissionalismo e atenção às diretrizes estabelecidas.
+Nem toda informação deve ser compartilhada. Nem toda presença deve ser notada.***""",
+        color=0x5865F2,
+        timestamp=datetime.datetime.utcnow()
+    )
+    
+    embed.set_author(
+        name="6° D Sup - Sexto Depósito de Suprimentos",
+        icon_url=member.guild.icon.url if member.guild.icon else None
+    )
+    embed.set_thumbnail(url=member.display_avatar.url)
+    embed.set_footer(text="Sistema de Inteligência do Exército")
+    
+    channel = bot.get_channel(WELCOME_CHANNEL_JOIN)
+    if channel:
+        await channel.send(embed=embed)
+
+async def send_goodbye_embed(member):
+    embed = discord.Embed(
+        title="Adeus!",
+        description=f"""***O registro de {member.mention} foi encerrado.
+
+Seu acesso ao Sistema de Inteligência do Exército foi removido, e suas credenciais internas foram revogadas conforme os protocolos estabelecidos.
+
+A participação em nossas operações fica, a partir deste momento, oficialmente finalizada.
+
+Desejamos êxito em seus próximos caminhos.
+Alguns nomes permanecem nos arquivos mesmo após deixarem os corredores.***""",
+        color=0xED4245,
+        timestamp=datetime.datetime.utcnow()
+    )
+    
+    embed.set_author(
+        name="6° D Sup - Sexto Depósito de Suprimentos",
+        icon_url=member.guild.icon.url if member.guild.icon else None
+    )
+    embed.set_thumbnail(url=member.display_avatar.url)
+    embed.set_footer(text="Sistema de Inteligência do Exército")
+    
+    channel = bot.get_channel(WELCOME_CHANNEL_LEAVE)
+    if channel:
+        await channel.send(embed=embed)
+
 # ================== JOIN / LEAVE ==================
 
 @bot.event
 async def on_member_join(member):
     if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX): 
-        return
-
+        await send_welcome_embed(member)
+           return 
+    
     embed = discord.Embed(title="✅ Novo Membro", color=0x00FF00, timestamp=datetime.datetime.utcnow())  
     embed.set_author(name=str(member), icon_url=member.avatar.url if member.avatar else None)  
     embed.add_field(name="Usuário", value=f"{member.mention} (`{member.id}`)", inline=False)  
