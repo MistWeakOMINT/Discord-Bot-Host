@@ -247,7 +247,6 @@ Alguns nomes permanecem nos arquivos mesmo após deixarem os corredores.***""",
 async def on_member_join(member):
     if member.guild.id not in (GUILD_PRINCIPAL, GUILD_SIEX): 
         await send_welcome_embed(member)
-           return 
     
     embed = discord.Embed(title="✅ Novo Membro", color=0x00FF00, timestamp=datetime.datetime.utcnow())  
     embed.set_author(name=str(member), icon_url=member.avatar.url if member.avatar else None)  
