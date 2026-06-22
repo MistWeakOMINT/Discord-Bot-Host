@@ -27,6 +27,18 @@ node_modules
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# SIEx specific
+uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+
 # misc
 /.sass-cache
 /connect.lock
@@ -47,3 +59,12 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
