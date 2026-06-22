@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIEx - Documentos e Seções</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Tela de Login/Registro -->
+    <div id="auth-screen" class="screen active">
+        <div class="auth-container">
+            <h1>SIEx - Documentos e Seções</h1>
+            <button class="btn-primary" onclick="showLoginOptions()">Login</button>
+        </div>
+    </div>
+
+    <!-- Opções de Login -->
+    <div id="login-options-screen" class="screen">
+        <div class="modal">
+            <button class="btn-close" onclick="showScreen('auth-screen')">&times;</button>
+            <div class="modal-content">
+                <h2>Acesso à Conta</h2>
+                <button class="btn-secondary" onclick="showScreen('login-screen')">Login</button>
+                <button class="btn-secondary" onclick="showScreen('register-screen')">Criar Conta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div id="login-screen" class="screen">
+        <div class="modal">
+            <button class="btn-close" onclick="showScreen('auth-screen')">&times;</button>
+            <div class="modal-content">
+                <h2>Login</h2>
+                <form onsubmit="handleLogin(event)">
+                    <input type="text" id="login-username" placeholder="Nick do Discord" required>
+                    <input type="password" id="login-password" placeholder="Senha" required>
+                    <button type="submit" class="btn-primary">Entrar</button>
+                </form>
+                <div id="login-error" class="error"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Registro -->
+    <div id="register-screen" class="screen">
+        <div class="modal">
+            <button class="btn-close" onclick="showScreen('auth-screen')">&times;</button>
+            <div class="modal-content">
+                <h2>Criar Conta</h2>
+                <form onsubmit="handleRegisterStep1(event)">
+                    <input type="text" id="register-discord" placeholder="Nick do Discord" required>
+                    <input type="text" id="register-name" placeholder="Nome da Conta" required>
+                    <input type="password" id="register-password" placeholder="Senha" required>
+                    <input type="password" id="register-confirm-password" placeholder="Confirmar Senha" required>
+                    <button type="submit" class="btn-primary">Próximo</button>
+                </form>
+                <div id="register-error" class="error"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Perfil (Passo 2 do Registro) -->
+    <div id="profile-setup-screen" class="screen">
+        <div class="modal">
+            <div class="modal-content">
+                <h2>Complete seu Perfil</h2>
+                <form onsubmit="handleRegisterStep2(event)">
+                    <textarea id="profile-bio" placeholder="Sua Bio" maxlength="300"></textarea>
+                    <input type="file" id="profile-picture" accept="image/*" required>
+                    <div id="preview-pic" class="preview"></div>
+                    <button type="submit" class="btn-primary">Criar Conta</button>
+                </form>
+                <div id="profile-error" class="error"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel Principal -->
+    <div id="main-panel" class="screen">
+        <div class="sidebar">
+            <div class="user-header">
+                <img id="sidebar-profile-pic" src="" alt="Perfil">
+                <div class="user-info">
+                    <h3 id="sidebar-username"></h3>
+                    <p id="sidebar-discord"></p>
+                </div>
+                <button class="btn-logout" onclick="handleLogout()">Sair</button>
+            </div>
+
+            <nav class="menu">
+                <button class="menu-item active" onclick="openMenu('configuracoes')">⚙️ Configurações</button>
+                <button class="menu-item" onclick="openMenu('area-restrita')">🔒 Área Restrita</button>
+                <button class="menu-item" onclick="openMenu('documentos')">📄 Documentos</button>
+            </nav>
+
+            <div id="planejamentos-list" class="items-list"></div>
+            <div id="documentos-list" class="items-list"></div>
+        </div>
+
+        <div class="main-content">
+            <!-- Configurações -->
+            <div id="menu-configuracoes" class="menu-content active">
+                <h2>Configurações</h2>
+                <div class="config-section">
+                    <label>Tamanho de Letra</label>
+                    <input type="range" min="12" max="20" value="16" onchange="changeFontSize(this.value)">
+                </div>
+                <div class="config-section">
+                    <label>Cor do Site</label>
+                    <input type="color" value="#1e1e2e" onchange="changeSiteColor(this.value)">
+                </div>
+                <div class="config-section">
+                    <button class="btn-secondary" onclick="openChangeProfilePic()">Trocar Foto de Perfil</button>
+                    <input type="file" id="change-pic-input" accept="image/*" style="display:none" onchange="updateProfilePic(event)">
+                </div>
+                <div class="config-section">
+                    <label>Bio</label>
+                    <textarea id="config-bio" maxlength="300"></textarea>
+                    <button class="btn-secondary" onclick="updateBio()">Salvar Bio</button>
+                </div>
+
+                <!-- Administração (apenas para admin) -->
+                <div id="admin-section" style="display:none; margin-top: 30px; border-top: 2px solid #444; padding-top: 20px;">
+                    <h3>Administração</h3>
+                    <button class="btn-admin" onclick="openAdminModal('add-admin')">➕ Adicionar Admin</button>
+                    <button class="btn-admin" onclick="openAdminModal('add-restricted')">🔓 Adicionar Acesso a Área Restrita</button>
+                    <button class="btn-admin" onclick="openAdminModal('ban-members')">🚫 Banir Membros</button>
+                    <button class="btn-admin" onclick="openAdminModal('add-ctr')">👤 Adicionar Membro C ITR</button>
+                    <button class="btn-admin" onclick="openAdminModal('add-cai')">👥 Adicionar Membro CAI</button>
+                </div>
+            </div>
+
+            <!-- Área Restrita -->
+            <div id="menu-area-restrita" class="menu-content">
+                <h2>Área Restrita</h2>
+                <button class="btn-primary" onclick="createPlanning()">📝 Criar Planejamento</button>
+                <div id="planning-editor" style="display:none">
+                    <input type="text" id="planning-title" placeholder="Título do Planejamento">
+                    <div id="editor-planning" class="editor"></div>
+                    <button class="btn-primary" onclick="savePlanning()">Salvar Planejamento</button>
+                    <button class="btn-secondary" onclick="cancelPlanning()">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- Documentos -->
+            <div id="menu-documentos" class="menu-content">
+                <h2>Documentos</h2>
+                <button class="btn-primary" onclick="createDocument()">📝 Criar Documento</button>
+                <div id="document-editor" style="display:none">
+                    <input type="text" id="document-title" placeholder="Título do Documento">
+                    <div id="editor-document" class="editor"></div>
+                    <button class="btn-primary" onclick="saveDocument()">Salvar Documento</button>
+                    <button class="btn-secondary" onclick="cancelDocument()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Admin -->
+    <div id="admin-modal" class="modal" style="display:none">
+        <div class="modal-content">
+            <button class="btn-close" onclick="closeAdminModal()">&times;</button>
+            <div id="admin-modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Proteção contra Screenshots e Cópia -->
+    <script>
+        // Desabilitar print/screenshot
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'PrintScreen') {
+                e.preventDefault();
+                document.body.style.filter = 'brightness(0)';
+                setTimeout(() => document.body.style.filter = 'brightness(1)', 100);
+            }
+        });
+
+        // Desabilitar cópia de texto
+        document.addEventListener('copy', (e) => {
+            e.preventDefault();
+        });
+
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+    </script>
+
+    <script src="app.js"></script>
+</body>
+</html>
