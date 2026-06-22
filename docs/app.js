@@ -7,7 +7,7 @@ const appState = {
     editorType: null, // 'planning' ou 'document'
 };
 
-const API_URL = '/api';
+const API_URL = 'https://sweet-recreation-railway.up.railway.app/api';
 const DISCORD_SERVER_ID = '1499872178039029792';
 const DISCORD_CHANNEL_ID = '1518419101242888273';
 
