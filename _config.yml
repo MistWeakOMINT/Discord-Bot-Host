@@ -1,0 +1,9 @@
+# GitHub Pages Configuration
+theme: jekyll-theme-slate
+title: SIEx - Documentos e Seções
+description: Sistema de gerenciamento de documentos com integração Discord
+show_downloads: true
+github:
+  is_project_page: true
+  repository_name: Discord-Bot-Host
+  owner_name: MistWeakOMINT
