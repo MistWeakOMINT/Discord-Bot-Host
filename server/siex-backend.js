@@ -1,4 +1,9 @@
 const express = require('express');
+"dependencies": {
+  "cors": "^2.8.5",
+  "express": "^4.18.2"
+}
+
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
